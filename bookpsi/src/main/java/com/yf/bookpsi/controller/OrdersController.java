@@ -1,13 +1,18 @@
 package com.yf.bookpsi.controller;
 
+import com.alipay.api.AlipayApiException;
 import com.yf.bookpsi.pojo.OrderBook;
 import com.yf.bookpsi.pojo.Orders;
 import com.yf.bookpsi.service.OrderBookService;
 import com.yf.bookpsi.service.OrdersService;
+import com.yf.bookpsi.service.PayService;
 import com.yf.bookpsi.util.SerialNumber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
@@ -18,6 +23,8 @@ public class OrdersController {
     OrdersService orderService;
     @Autowired
     OrderBookService orderBookService;
+    @Autowired
+    PayService payService;
 
     @GetMapping("/api/order/{type}")
     public List<Orders> list(@PathVariable("type") int type){
@@ -40,8 +47,8 @@ public class OrdersController {
     }
 
 
-    @PostMapping("/api/order/submit")
-    public void stock(@RequestBody Orders orders){
+    @RequestMapping("/api/order/submit")
+    public String stock(@RequestBody Orders orders) throws IOException, AlipayApiException {
         Orders orders1=new Orders();
         orders1.setSerialid(SerialNumber.snumber());
         orders1.setStatus(orders.getStatus());
@@ -49,8 +56,11 @@ public class OrdersController {
         orders1.setType(orders.getType());
         orders1.setCreatetime(new Timestamp(new Date().getTime()));
 
+
+
         orderService.add(orders1);
         orderBookService.savestock(orders1.getId(),orders1.getType(),orders.getOrderBooks());
+        return payService.aliPaytest((Integer)orders1.getValue(),(Integer)orders1.getSerialid());
     }
 
     @DeleteMapping("/api/order/delete/{id}")
