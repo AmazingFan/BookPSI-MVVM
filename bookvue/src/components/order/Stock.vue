@@ -10,8 +10,10 @@
       </div>
 
   <div>
-    <el-button @click="onsubmit" style="margin:0px  20px 0px 0px;float:left">提交订单<i class="el-icon-position el-icon--right"></i></el-button>
+    <el-button @click="onsubmit" style="margin:0px  20px 0px 0px;float:left">提交订单<i class="el-icon-position el-icon--right"></i>
+    </el-button>
   </div>
+
 
   </div>
       </el-header>
@@ -157,14 +159,31 @@
             status:this.status,
             type:this.type,
             orderBooks: this.test
-          }).then(resp => {
-            if (resp && resp.status === 200) {
-              this.$alert('下订单成功')
-              this.dialogFormVisible = false
-              this.selectedbooks=[]
-            }
           })
+
+            .then(resp => {
+              var newwindow = window.open("#","_blank");
+              newwindow.document.write(resp.data);
+
+              this.$confirm('已完成付款?', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+              }).then(() => {
+                this.$message({
+                  type: 'success',
+                  message: '采购下单成功!'})
+                this.selectedbooks=''
+              }).catch(() => {
+                this.$message({
+                  type: 'info',
+                  message: '已取消'
+                });
+              });
+
+})
         }
+
       }
 
     }
